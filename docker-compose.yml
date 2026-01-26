@@ -1,6 +1,12 @@
-version: "3.8"
-
 services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
   postgres:
     image: postgres:latest
     container_name: postgres
@@ -26,5 +32,6 @@ services:
       - cassandra_data:/var/lib/cassandra
 
 volumes:
+  redis_data:
   postgres_data:
   cassandra_data:

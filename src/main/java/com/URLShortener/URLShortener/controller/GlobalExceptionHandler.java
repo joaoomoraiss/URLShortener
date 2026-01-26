@@ -1,6 +1,7 @@
 package com.URLShortener.URLShortener.controller;
 
 import com.URLShortener.URLShortener.domain.dto.ErrorDto;
+import com.URLShortener.URLShortener.exceptions.InvalidIncrementId;
 import com.URLShortener.URLShortener.exceptions.InvalidShortCode;
 import com.URLShortener.URLShortener.exceptions.OriginalUrlIsNotUrl;
 import org.springframework.http.HttpStatus;
@@ -30,5 +31,12 @@ public class GlobalExceptionHandler {
         ErrorDto errorDto = new ErrorDto();
         errorDto.setError(ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorDto);
+    }
+
+    @ExceptionHandler(InvalidIncrementId.class)
+    public ResponseEntity<ErrorDto> handleInvalidIncrementId(InvalidIncrementId ex) {
+        ErrorDto errorDto = new ErrorDto();
+        errorDto.setError(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorDto);
     }
 }
