@@ -1,24 +1,28 @@
 package com.URLShortener.URLShortener.services.impl;
 
 import com.URLShortener.URLShortener.domain.CreateUrlRequest;
-import com.URLShortener.URLShortener.domain.RedirectUrlRequest;
 import com.URLShortener.URLShortener.domain.entities.Url;
+import com.URLShortener.URLShortener.domain.entities.UrlClicks;
 import com.URLShortener.URLShortener.exceptions.InvalidShortCode;
 import com.URLShortener.URLShortener.exceptions.OriginalUrlIsNotUrl;
-import com.URLShortener.URLShortener.repositories.UrlRepository;
+import com.URLShortener.URLShortener.repositories.cassandra.UrlClicksRepository;
+import com.URLShortener.URLShortener.repositories.cassandra.UrlRepository;
 import com.URLShortener.URLShortener.services.UrlService;
 import org.hashids.Hashids;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class UrlServiceImpl implements UrlService {
 
     private final UrlRepository urlRepository;
+    private final UrlClicksRepository urlClicksRepository;
 
-    public UrlServiceImpl(UrlRepository urlRepository) {
+    public UrlServiceImpl(UrlRepository urlRepository, UrlClicksRepository urlClicksRepository) {
         this.urlRepository = urlRepository;
+        this.urlClicksRepository = urlClicksRepository;
     }
 
     @Override
@@ -34,22 +38,26 @@ public class UrlServiceImpl implements UrlService {
             throw new OriginalUrlIsNotUrl();
         }
 
-        long initialCount = urlRepository.count() + 985156648L;
+        //long initialCount = urlRepository.count() + 985156648L; //change in prod
+
+        // Generate unique ID using timestamp + random number to avoid count() query
+        long uniqueId = System.currentTimeMillis() + ThreadLocalRandom.current().nextInt(1000);
 
         //encrypt
-        Hashids hashids = new Hashids("secret", 5);
-        String shortCode = hashids.encode(initialCount);
+        Hashids hashids = new Hashids("secret", 5); //change in prod
+        String shortCode = hashids.encode(uniqueId);
 
         LocalDateTime now = LocalDateTime.now();
         Url newUrl = new Url(
                 shortCode,
                 request.getOriginalUrl(),
-                0L,
                 now,
                 now
         );
 
-        return urlRepository.save(newUrl);
+        urlRepository.save(newUrl);
+
+        return newUrl;
     }
 
     @Override
@@ -60,7 +68,7 @@ public class UrlServiceImpl implements UrlService {
         }
 
         Url url = urlRepository.findById(shortCode)
-                .orElseThrow(() -> new InvalidShortCode());
+                .orElseThrow(InvalidShortCode::new);
 
         return url.getOriginalUrl();
     }
