@@ -1,6 +1,6 @@
 services:
   redis:
-    image: redis:latest
+    image: redis:7-alpine
     container_name: redis
     ports:
       - "6379:6379"
@@ -8,30 +8,17 @@ services:
       - redis_data:/data
 
   postgres:
-    image: postgres:latest
+    image: postgres:16-alpine
     container_name: postgres
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root
-      POSTGRES_DB: mydatabase
+      POSTGRES_DB: database
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  cassandra:
-    image: cassandra:4.1
-    container_name: cassandra
-    ports:
-      - "9042:9042"
-    environment:
-      CASSANDRA_CLUSTER_NAME: "url-shortener-cluster"
-      CASSANDRA_DC: dc1
-      CASSANDRA_RACK: rack1
-    volumes:
-      - cassandra_data:/var/lib/cassandra
-
 volumes:
   redis_data:
   postgres_data:
-  cassandra_data:

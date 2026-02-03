@@ -3,10 +3,10 @@ package com.URLShortener.URLShortener;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.data.cassandra.repository.config.EnableCassandraRepositories;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
-@EnableCassandraRepositories(basePackages = "com.URLShortener.URLShortener.repositories.cassandra")
+@EnableJpaRepositories
 @EnableCaching
 public class UrlShortenerApplication {
 

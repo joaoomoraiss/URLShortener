@@ -1,7 +1,6 @@
 package com.URLShortener.URLShortener.services.impl;
 
 import com.URLShortener.URLShortener.exceptions.InvalidIncrementId;
-import com.URLShortener.URLShortener.repositories.cassandra.UrlRepository;
 import com.URLShortener.URLShortener.services.IdService;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;

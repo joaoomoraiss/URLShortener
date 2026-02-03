@@ -4,8 +4,7 @@ import com.URLShortener.URLShortener.domain.CreateUrlRequest;
 import com.URLShortener.URLShortener.domain.entities.Url;
 import com.URLShortener.URLShortener.exceptions.InvalidShortCode;
 import com.URLShortener.URLShortener.exceptions.OriginalUrlIsNotUrl;
-import com.URLShortener.URLShortener.repositories.cassandra.UrlClicksRepository;
-import com.URLShortener.URLShortener.repositories.cassandra.UrlRepository;
+import com.URLShortener.URLShortener.repositories.jpa.UrlRepository;
 import com.URLShortener.URLShortener.services.IdService;
 import com.URLShortener.URLShortener.services.UrlService;
 import org.hashids.Hashids;
@@ -18,13 +17,11 @@ import java.time.LocalDateTime;
 public class UrlServiceImpl implements UrlService {
 
     private final UrlRepository urlRepository;
-    private final UrlClicksRepository urlClicksRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final IdService idService;
 
-    public UrlServiceImpl(UrlRepository urlRepository, UrlClicksRepository urlClicksRepository, RedisTemplate<String, String> redisTemplate, IdService idService) {
+    public UrlServiceImpl(UrlRepository urlRepository, RedisTemplate<String, String> redisTemplate, IdService idService) {
         this.urlRepository = urlRepository;
-        this.urlClicksRepository = urlClicksRepository;
         this.redisTemplate = redisTemplate;
         this.idService = idService;
     }
@@ -53,6 +50,7 @@ public class UrlServiceImpl implements UrlService {
         Url newUrl = new Url(
                 shortCode,
                 request.getOriginalUrl(),
+                0L,
                 now,
                 now
         );
@@ -69,29 +67,30 @@ public class UrlServiceImpl implements UrlService {
             throw new IllegalArgumentException("Short code cannot be null or empty");
         }
 
+        Url url = urlRepository.findById(shortCode)
+                .orElseThrow(InvalidShortCode::new);
+
         String cacheKey = "short:url:" + shortCode;
 
         // get in cache
         String cachedUrl = redisTemplate.opsForValue().get(cacheKey);
         if (cachedUrl != null) {
-            urlClicksRepository.increment(shortCode);
+            url.setClickCount(url.getClickCount() + 1);
+            urlRepository.save(url);
             return cachedUrl;
         }
 
-        // go to cassandra
-        Url url = urlRepository.findById(shortCode)
-                .orElseThrow(InvalidShortCode::new);
 
         // +1 in clicks
         try {
-            urlClicksRepository.increment(shortCode);
+            url.setClickCount(url.getClickCount() + 1);
+            urlRepository.save(url);
         } catch (Exception e) {
             throw new InvalidShortCode("Invalid short code: " + e);
         }
 
         // if clicks > 1000, cache in redis
-        Long clicks = urlClicksRepository.findClicksByShortCode(shortCode);
-        if (clicks != null && clicks > 1000) {
+        if (url.getClickCount() != null && url.getClickCount() > 1000) {
             redisTemplate.opsForValue().set(cacheKey, url.getOriginalUrl());
         }
 
