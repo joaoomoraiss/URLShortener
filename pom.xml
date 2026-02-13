@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.URLShortener</groupId>
 	<artifactId>URLShortener</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>URLShortener</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
@@ -69,6 +69,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
